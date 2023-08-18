@@ -16,12 +16,13 @@
 
 
 # Farmer schema
-- location 
-- products
-- farmname
-- Username
+![PICTURE OF ERD](./images/FarmerErd.png)
 
-# Product scheam
+# User schema
+![PICTURE OF ERD](./images/userErd.png)
+
+
+# Product schema
 
 # Farmer routes :
 | ENDPOINT         | METHOD        | PURPOSE |
@@ -47,8 +48,7 @@
 |/user/Signup    |  POST       | Signup page |
 |/user/Login     |  POST       | Login page  |
 
-# User schema
-- username
+
 
 # mutual routes
 

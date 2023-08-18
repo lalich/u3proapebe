@@ -13,7 +13,7 @@
 * Figma
 
 # Trello Board: 
-
+[Ape food Trello board](https://trello.com/b/2Nur9hRb/apefoodnet)
 
 # Farmer schema
 ![PICTURE OF ERD](./images/FarmerErd.png)
@@ -38,6 +38,7 @@
 |/farm/:id         |  DELETE     | Deletes the farm for the farmer   |
 |/farmer/Signup    |  POST       | Signup page |
 |/farmer/Login     |  POST       | Login page  |
+
 # User routes
 
 | ENDPOINT       | METHOD      | PURPOSE |
@@ -59,9 +60,7 @@
 
 # Mockup:
 
-![Alt text](<images/farmer login page.png>)
-
-
+# Farmer login Page  ![Farmer Login page](<images/farmer login page.png>)  Farmer signup Page ![Alt text](<images/farmer Signup page.png>) User signup ![Alt text](<images/User signup page.png>) User Login ![Alt text](<images/User login page.png>) Home Page ![Alt text](<images/Home page.png>) Adding a product page ![Alt text](images/Frame.png) Product page for farmer ![Alt text](<images/Product page for farmer.png>) Product page for user ![Alt text](<images/Product page for user.png>)
 # Gettg started:
 
 Click [here]() to enter the Portal !

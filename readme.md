@@ -29,7 +29,7 @@
 |------------------|-------------|---------|
 |/home             |  GET        | home page |
 |/product/new      |  POST       | Creates a new prduct route |
-|/product/:id/edit |  Edit       | Edit a route |
+|/product/:id      |  Edit       | Edit a route |
 |/product/:id      |  PUT        | Updates current product  |
 |/product/:id      |  DELETE     | Destroys a product  |
 |/farm/new         |  POST       | Adds a new farm for the farmer |

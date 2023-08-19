@@ -15,15 +15,15 @@
 # Trello Board: 
 [Ape food Trello board](https://trello.com/b/2Nur9hRb/apefoodnet)
 
-# Farmer schema
-![PICTURE OF ERD](./images/FarmerErd.png)
+# Farmer ERD
+![PICTURE OF ERD](./images/Farmer.png)
 
-# User schema
+# User ERD
 ![PICTURE OF ERD](./images/userErd.png)
 
 
-# Product schema
-
+# Product ERD
+![PICTURE OF ERD](./images/product.png)
 # Farmer routes :
 | ENDPOINT         | METHOD        | PURPOSE |
 |------------------|-------------|---------|

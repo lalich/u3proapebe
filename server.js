@@ -33,6 +33,7 @@ mongoose.connection
 //Farmer schema 
 const productSchema = new mongoose.Schema({
     productname : String ,
+    image : String,
     description : String, 
     price : Number ,
     username : String 
@@ -51,6 +52,7 @@ const user = mongoose.model('User' , userSchema)
 // farm info schema
 const farminfoSchema = new mongoose.Schema({
     farmname : String,
+    image : String,
     address : String,
     state : String ,
     city : String,

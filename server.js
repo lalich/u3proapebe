@@ -35,7 +35,7 @@ const productSchema = new mongoose.Schema({
     productname : String ,
     description : String, 
     price : Number ,
-    username : String 
+    username : String
 })
 
 const product = mongoose.model('products' , productSchema)
@@ -65,7 +65,7 @@ app.get('/', (req , res) => {
     res.send({working : "Running"})
 })
 
-app.post('/product' , async (req ,res) =>{
+app.post('/product', async (req ,res) =>{
     try{
         res.json(await product.create(req.body))
     } catch (error) {

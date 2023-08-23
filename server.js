@@ -22,9 +22,16 @@ app.use(session({
     resave: false,
     saveUninitialized: true
 }))
+const checkAuth = (req, res, next) => {
+    if (req.session.loggedIn) {
+        next()
+    } else {
+        res.redirect('farmer/login')
+    }
+}
 
 const aFarmer = (req, res, next) => {
-    if(req.session && req.session.user && req.session.user.aFarmer) {
+    if(req.session && req.session.farmer && req.session.user.aFarmer) {
         next()
     } else {
         res.redirect('/farmer/login')
@@ -220,6 +227,8 @@ app.post('/farmer/login', async (req, res) => {
             if (passmatches) {
                 req.session.farmername = req.body.farmername
                 req.session.loggedIn = true
+                res.cookie('sessionID', req.sessionID, {httpOnly: true })
+                // console.log(cookie)
                 res.redirect('/farmer')
             } else {
                 res.send('Wrong password, please try again', redirect('/farner/login'))
@@ -237,12 +246,19 @@ app.post('/user/login', async (req, res) => {
             if (passmatches) {
                 req.session.username = req.body.username
                 req.session.loggedIn = true
+               
+                res.cookie('sessionID', req.sessionID, {httpOnly: true })
+                // console.log(cookie)
                 res.redirect('/')
             } else {
                 res.send('Wrong password, please try again', redirect('/user/login'))
             }
         }
 
+})
+
+app.get('/farmer', checkAuth, (req, res) => {
+    res.send('Welcome to your Farmer page')
 })
 
 app.get('/logout', (req,res) => {

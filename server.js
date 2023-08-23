@@ -70,6 +70,7 @@ app.get('/', (req , res) => {
 
 app.post('/product', async (req ,res) =>{
     try{
+        console.log(req.body)
         res.json(await product.create(req.body))
     } catch (error) {
         res.status(400).json(error)

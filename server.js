@@ -7,14 +7,43 @@ const { PORT , DATABASE_URL} = process.env
 const morgan = require('morgan')
 const mongoose = require('mongoose')
 const cors = require('cors')
-
+const bcrypt = require('bcryptjs')
+const cookieParser = require('cookie-parser')
+const jsonwebtoken = require('jsonwebtoken')
+const session = require('express-session')
 ////////////////////////////////
 
 // Middleware configuration
 app.use(morgan('dev'))
 app.use(cors())
 app.use(express.json())
+app.use(session({
+    secret: 'APEFOOD',
+    resave: false,
+    saveUninitialized: true
+}))
+const checkAuth = (req, res, next) => {
+    if (req.session.loggedIn) {
+        next()
+    } else {
+        res.redirect('farmer/login')
+    }
+}
 
+const aFarmer = (req, res, next) => {
+    if(req.session && req.session.farmer && req.session.user.aFarmer) {
+        next()
+    } else {
+        res.redirect('/farmer/login')
+    }
+}
+const aUser = (req, res, next) => {
+    if(req.session && req.session.user && req.session.user.aUser) {
+        next()
+    } else {
+        res.redirect('/user/login')
+    }
+}
 ////////////////////////////////
 
 // mogoose configuration / schema configuration
@@ -32,45 +61,52 @@ mongoose.connection
 
 //Farmer schema 
 const productSchema = new mongoose.Schema({
-    productname : String ,
-    image : String,
-    description : String, 
-    price : Number ,
-    username : String
+    productname : {type: String, required: true},
+    image : {type: String, required: true},
+    description : {type: String, required: true}, 
+    price : {type: String, required: true},
+    farmname: {type: String, required: true},
+    username : {type: String, required: true},
 })
 
 const product = mongoose.model('products' , productSchema)
 ////////////////////////////////////////////////////////////////
 //User schema
 const userSchema = new mongoose.Schema({
-    username : String,
-    password : String,
+    username : {type: String, required: true, unique: true},
+    password : {type: String, required: true},
 })
 
 const user = mongoose.model('User' , userSchema)
 ////////////////////////////////
 // farm info schema
 const farminfoSchema = new mongoose.Schema({
-    farmname : String,
-    image : String,
-    address : String,
-    state : String ,
-    city : String,
-    username : String,
-    password : String
+    farmname : {type: String, required: true},
+    image : {type: String, required: true},
+    address : {type: String, required: true},
+    state : {type: String, required: true},
+    city : {type: String, required: true},
+    zip: {type: String, required: true},
+    farmername: {type: String, required: true},
+    username : {type: String, required: true, unique: true},
+    
 })
 
 const farmerInfo = mongoose.model('Farm information' , farminfoSchema)
 ////////////////////////////////
+const farmerSchema = new mongoose.Schema({
+    farmername: {type: String, required: true, unique: true},
+    password: {type: String, required: true}
+})
+const farmer = mongoose.model('Farmer', farmerSchema)
 
 // product Routes
 app.get('/', (req , res) => {
     res.send({working : "Running"})
 })
 
-app.post('/product', async (req ,res) =>{
-    try{
-        console.log(req.body)
+app.post('/product' , async (req ,res) =>{
+    try{console.log(req.body)
         res.json(await product.create(req.body))
     } catch (error) {
         res.status(400).json(error)
@@ -158,6 +194,77 @@ app.delete('/farm/:id' , async (req , res) => {
     } catch (error) {
         res.status(400).json()
     }
+})
+
+app.post('/farmer/signup', async (req, res) => {
+    try {
+        req.body.password = await bcrypt.hash(req.body.password, await bcrypt.genSalt(10))
+        await farmer.create(req.body)
+      res.status(201).json({message: 'Signup success, go ahead and plant away!'})
+    } catch(error) {
+        console.error('You aint a farmer here yet, try again!', error)
+        res.send('Please try again, in order to assist your community')
+    }
+})
+
+app.post('/user/signup', async (req, res) => {
+    try {
+        req.body.password = await bcrypt.hash(req.body.password, await bcrypt.genSalt(10))
+        await user.create(req.body)
+      
+    } catch(error) {
+        console.error('Not yet able to access the user features, please try again', error)
+        res.send('Please try again, in order to use the features of a user')
+    }})
+
+app.post('/farmer/login', async (req, res) => {
+    const aFarmer = await farmer.findOne({ farmername: req.body.farmername})
+    console.log(aFarmer)
+        if(!aFarmer) {
+            res.send('that aint a farmer here.. yet!', redirect('farmer/signup'))
+        } else {
+            const passmatches = bcrypt.compareSync(req.body.password, aFarmer.password)
+            if (passmatches) {
+                req.session.farmername = req.body.farmername
+                req.session.loggedIn = true
+                res.cookie('sessionID', req.sessionID, {httpOnly: true })
+                // console.log(cookie)
+                res.redirect('/farmer')
+            } else {
+                res.send('Wrong password, please try again', redirect('/farner/login'))
+            }
+        }
+})
+
+app.post('/user/login', async (req, res) => {
+    const aUser = await user.findOne({ username: req.body.username})
+        console.log(aUser)
+        if(!aUser) {
+            res.send('that aint a farmer here.. yet!', redirect('user/signup'))
+        } else {
+            const passmatches = bcrypt.compareSync(req.body.password, aUser.password)
+            if (passmatches) {
+                req.session.username = req.body.username
+                req.session.loggedIn = true
+               
+                res.cookie('sessionID', req.sessionID, {httpOnly: true })
+                // console.log(cookie)
+                res.redirect('/')
+            } else {
+                res.send('Wrong password, please try again', redirect('/user/login'))
+            }
+        }
+
+})
+
+app.get('/farmer', checkAuth, (req, res) => {
+    res.send('Welcome to your Farmer page')
+})
+
+app.get('/logout', (req,res) => {
+    req.session.destroy(err => {
+    res.redirect('/')
+})
 })
 
 ////////////////////////////////

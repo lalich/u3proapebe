@@ -14,11 +14,10 @@ const jsonwebtoken = require('jsonwebtoken')
 ////////////////////////////////
 
 // mogoose configuration / schema configuration
-mongoose.connect(DATABASE_URL)
-//  ,{
-//     useUnifiedTopology: true,
-//     useNewUrlParser: true,
-// })
+mongoose.connect(DATABASE_URL ,{
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+})
 
 mongoose.connection
 .on('open', () => console.log('Connected to db'))
@@ -53,8 +52,8 @@ const farminfoSchema = new mongoose.Schema({
     farmname : {type: String, required: true},
     image : {type: String, required: true},
     address : {type: String, required: true},
-    state : {type: String, required: true},
     city : {type: String, required: true},
+    state : {type: String, required: true},
     zip: {type: String, required: true},
     farmername: {type: String, required: true},
     

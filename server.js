@@ -80,15 +80,6 @@ app.use(morgan('dev'))
 app.use(express.json())
 
 
-const checkAuth = (req, res, next) => {
-    if (req.session.loggedIn) {
-        next()
-    } else {
-        res.redirect('farmer/login')
-    }
-}
-
-
 const aFarmer = async (req, res, next) => {
     if(req.cookies.token) {
        const payload = await jsonwebtoken.verify(req.cookies.token, process.env.SECRET)
@@ -368,9 +359,6 @@ app.get('./getcookie', (req, res) => {
     const sessionID = req.cookies.sessionID
     console.log('Session ID:', sessionID)
     res.send('cookie retrieved')
-})
-app.get('/farmer', checkAuth, (req, res) => {
-    res.send('Welcome to your Farmer page')
 })
 
 app.get("/logout", (req, res) => {

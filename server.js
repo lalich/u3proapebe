@@ -33,7 +33,7 @@ const productSchema = new mongoose.Schema({
     description : {type: String, required: true}, 
     price : {type: String, required: true},
     farmername: {type: String, required: true},
-    username : {type: String, required: true},
+    
 })
 
 const Product = mongoose.model('products' , productSchema)
@@ -42,6 +42,7 @@ const Product = mongoose.model('products' , productSchema)
 const userSchema = new mongoose.Schema({
     username : {type: String, required: true, unique: true},
     password : {type: String, required: true},
+    zip : {type: String, required: true}
 })
 
 const User = mongoose.model('User' , userSchema)
@@ -55,7 +56,7 @@ const farminfoSchema = new mongoose.Schema({
     city : {type: String, required: true},
     zip: {type: String, required: true},
     farmername: {type: String, required: true},
-    username : {type: String, required: true},
+    
     
 })
 
@@ -115,6 +116,34 @@ app.get('/', (req , res) => {
     res.send({working : "Running"})
 })
 
+app.get('/product' , async (req , res) => {
+    try{
+        res.json(await Product.find({}))
+    } catch (error){
+        res.status(400).json(error)
+    }
+})
+
+app.get('/product/:id' , async (req , res) => {
+    try{
+        const product = await Product.findById(req.params.id)
+        res.json(product) 
+    } catch (error) {
+        res.status(400).json(error)
+    }
+})
+
+app.get('/farmer/product', aFarmer, async (req , res) => {
+    try{
+        const product = await Product.find({farmername: req.payload.farmername})
+        
+        res.json(product)
+    } catch (error){
+        res.status(400).json(error)
+    }
+})
+
+
 app.post('/product' , aFarmer, async (req ,res) =>{
     try
     {console.log(req.body)
@@ -130,33 +159,8 @@ app.post('/product' , aFarmer, async (req ,res) =>{
 
 })
 
-app.get('farmer/product', aFarmer, async (req , res) => {
-    try{
-        const product = await Product.find({farmername: req.payload.farmername})
-        
-        res.json(product)
-    } catch (error){
-        res.status(400).json(error)
-    }
-})
-app.get('user/product', aUser, async (req , res) => {
-    try{
-        const product = await Product.find({username: req.payload.username})
-        
-        res.json(product)
-    } catch (error){
-        res.status(400).json(error)
-    }
-})
-app.get('/product' , async (req , res) => {
-    try{
-        res.json(await Product.find({}))
-    } catch (error){
-        res.status(400).json(error)
-    }
-})
 
-app.get('/product/:id', aFarmer, async (req , res) => {
+app.get('/farmer/product/:id', aFarmer, async (req , res) => {
     try{
         const product = await Product.findById(req.params.id)
         res.json(product) 
@@ -166,14 +170,6 @@ app.get('/product/:id', aFarmer, async (req , res) => {
 })
 
 
-app.get('/product/:id' , async (req , res) => {
-    try{
-        const product = await Product.findById(req.params.id)
-        res.json(product) 
-    } catch (error) {
-        res.status(400).json(error)
-    }
-})
 
 app.put('/product/:id' , aFarmer, async (req , res) => {
     try{
@@ -194,6 +190,16 @@ app.delete('/product/:id' , aFarmer, async (req ,res) => {
         res.status(400).json()
     }
 })
+// taken out for now but will be used for favorite catalog
+// app.get('user/product', aUser, async (req , res) => {
+//     try{
+//         const product = await Product.find({username: req.payload.username})
+        
+//         res.json(product)
+//     } catch (error){
+//         res.status(400).json(error)
+//     }
+// })
 ////////////////////////////////////////////////////////////////
 // farm routes
 
@@ -207,21 +213,19 @@ app.get('/farm' , async (req , res) => {
     }
 });
 
-
-app.post('/farm' , aFarmer, async (req ,res) => {
-    try {
-        req.body.farmername = req.payload.farmername
-
-        const farm = await FarmInfo.create(req.body)
-        console.log(farm)
-        res.json(farm)      
-    } catch (error) {
-        res.status(400).json(error)
-    }
-})
 app.get('/farm/:id' , async (req , res) => {
     try{
         const farm = await FarmInfo.findById(req.params.id)
+        res.json(farm)
+    } catch (error) {
+        res.status(404).json(error)
+    }
+});
+
+app.get('/farmer/farm', aFarmer, async (req , res) => {
+    try{
+        const farm = await FarmInfo.find({farmername: req.payload.farmername})
+        
         res.json(farm)
     } catch (error) {
         res.status(404).json(error)
@@ -237,6 +241,18 @@ app.get('/farmer/farm/:id', aFarmer, async (req , res) => {
         res.status(404).json(error)
     }
 });
+
+app.post('/farm' , aFarmer, async (req ,res) => {
+    try {
+        req.body.farmername = req.payload.farmername
+
+        const farm = await FarmInfo.create(req.body)
+        console.log(farm)
+        res.json(farm)      
+    } catch (error) {
+        res.status(400).json(error)
+    }
+})
 
 app.put('/farm/:id', aFarmer, async (req , res) => {
     try{
@@ -276,10 +292,10 @@ app.post('/farmer/signup', async (req, res) => {
 
 app.post('/user/signup', async (req, res) => {
     try {
-        let { username, password } = req.body
+        let { username, password, zip } = req.body
         password = await bcrypt.hash(password, await bcrypt.genSalt(10))
         
-        const user = await User.create({ username, password })
+        const user = await User.create({ username, password, zip })
  
       res.status(201).json({message: 'Signup success, go ahead and food it up!'})
     } catch(error) {
@@ -289,7 +305,7 @@ app.post('/user/signup', async (req, res) => {
 
 app.post('/farmer/login', async (req, res) => {
     try {
-        const { farmername, password } = req.body
+        const { farmername, password, } = req.body
         const farmer = await Farmer.findOne({ farmername })
         console.log(farmer)
 
@@ -318,7 +334,7 @@ app.post('/farmer/login', async (req, res) => {
 
 app.post('/user/login', async (req, res) => {
         try {
-            const { username, password } = req.body
+            const { username, password, zip } = req.body
             const user = await User.findOne({ username })
             console.log(user)
     
@@ -339,6 +355,7 @@ app.post('/user/login', async (req, res) => {
                 sameSite: 'lax',
                 maxAge: 3600000,
             }) 
+            console.log(token)
                 res.json(user)
                } catch (error) {
                 res.status(400).json({ error: error.message })

@@ -7,13 +7,9 @@ const { PORT , DATABASE_URL} = process.env
 const morgan = require('morgan')
 const mongoose = require('mongoose')
 const cors = require('cors')
-
-////////////////////////////////
-
-// Middleware configuration
-app.use(morgan('dev'))
-app.use(cors())
-app.use(express.json())
+const bcrypt = require('bcryptjs')
+const cookieParser = require('cookie-parser')
+const jsonwebtoken = require('jsonwebtoken')
 
 ////////////////////////////////
 
@@ -32,132 +28,343 @@ mongoose.connection
 
 //Farmer schema 
 const productSchema = new mongoose.Schema({
-    productname : String ,
-    image : String,
-    description : String, 
-    price : Number ,
-    username : String
+    productname : {type: String, required: true},
+    image : {type: String, required: true},
+    description : {type: String, required: true}, 
+    price : {type: String, required: true},
+    farmername: {type: String, required: true},
+    
 })
 
-const product = mongoose.model('products' , productSchema)
+const Product = mongoose.model('products' , productSchema)
 ////////////////////////////////////////////////////////////////
 //User schema
 const userSchema = new mongoose.Schema({
-    username : String,
-    password : String,
+    username : {type: String, required: true, unique: true},
+    password : {type: String, required: true},
+    zip : {type: String, required: true}
 })
 
-const user = mongoose.model('User' , userSchema)
+const User = mongoose.model('User' , userSchema)
 ////////////////////////////////
 // farm info schema
 const farminfoSchema = new mongoose.Schema({
-    farmname : String,
-    image : String,
-    address : String,
-    state : String ,
-    city : String,
-    username : String,
-    password : String
+    farmname : {type: String, required: true},
+    image : {type: String, required: true},
+    address : {type: String, required: true},
+    city : {type: String, required: true},
+    state : {type: String, required: true},
+    zip: {type: String, required: true},
+    farmername: {type: String, required: true},
+    
+    
 })
 
-const farmerInfo = mongoose.model('Farm information' , farminfoSchema)
+const FarmInfo = mongoose.model('Farm information' , farminfoSchema)
 ////////////////////////////////
+const farmerSchema = new mongoose.Schema({
+    farmername: {type: String, required: true, unique: true},
+    password: {type: String, required: true}
+})
+const Farmer = mongoose.model('Farmer', farmerSchema)
+
+
+// Middleware configuration
+app.use(cors({
+    origin:'http://localhost:3000',
+    credentials: true,
+}))
+app.use(cookieParser())
+app.use(morgan('dev'))
+app.use(express.json())
+
+
+const aFarmer = async (req, res, next) => {
+    if(req.cookies.token) {
+       const payload = await jsonwebtoken.verify(req.cookies.token, process.env.SECRET)
+       req.payload = payload
+
+       next()
+    } else {
+        res.redirect('/farmer/login')
+    }
+}
+const aUser = async (req, res, next) => {
+    if(req.cookies.token) {
+        const payload = await jsonwebtoken.verify(req.cookies.token, process.env.SECRET)
+        req.paylaod = payload
+        next()
+    } else {
+        res.redirect('/user/login')
+    }
+}
+////////////////////////////////
+
+
 
 // product Routes
 app.get('/', (req , res) => {
     res.send({working : "Running"})
 })
 
-app.post('/product', async (req ,res) =>{
+app.get('/product' , async (req , res) => {
     try{
-        res.json(await product.create(req.body))
+        res.json(await Product.find({}))
+    } catch (error){
+        res.status(400).json(error)
+    }
+})
+
+app.get('/product/:id' , async (req , res) => {
+    try{
+        const product = await Product.findById(req.params.id)
+        res.json(product) 
     } catch (error) {
         res.status(400).json(error)
     }
-
 })
 
-app.get('/product' , async (req , res) => {
+app.get('/farmer/product', aFarmer, async (req , res) => {
     try{
-        res.json(await product.find({}))
+        const product = await Product.find({farmername: req.payload.farmername})
+        
+        res.json(product)
     } catch (error){
         res.status(400).json(error)
     }
 })
 
 
+app.post('/product' , aFarmer, async (req ,res) =>{
+    try
+    {console.log(req.body)
+        req.body.farmername = req.payload.farmername
+        
+        const product = await Product.create(req.body)
+        // log the product //
+        console.log(product)
+        res.json(product)
+    } catch (error) {
+        res.status(400).json(error)
+    }
 
-app.get('/product/:id' , async (req , res) => {
+})
+
+
+app.get('/farmer/product/:id', aFarmer, async (req , res) => {
     try{
-        const Product = await product.findById(req.params.id)
-        res.json(Product) 
+        const product = await Product.findById(req.params.id)
+        res.json(product) 
     } catch (error) {
         res.status(400).json(error)
     }
 })
 
-app.put('/product/:id' , async (req , res) => {
+
+
+app.put('/product/:id' , aFarmer, async (req , res) => {
     try{
-        res.json(await product.findByIdAndUpdate(req.params.id, req.body  , {new:true}))
+        const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+        })
+        res.json(product)
     } catch (error) {
         res.status(400).json(error)
     }
 })
 
-app.delete('/product/:id' , async (req ,res) => {
+app.delete('/product/:id' , aFarmer, async (req ,res) => {
     try{
-        res.json(await product.findByIdAndDelete(req.params.id))
+        const product = res.json(await Product.findByIdAndDelete(req.params.id))
         res.status(204).json(product)
     } catch (error) {
         res.status(400).json()
     }
 })
+// taken out for now but will be used for favorite catalog
+// app.get('user/product', aUser, async (req , res) => {
+//     try{
+//         const product = await Product.find({username: req.payload.username})
+        
+//         res.json(product)
+//     } catch (error){
+//         res.status(400).json(error)
+//     }
+// })
 ////////////////////////////////////////////////////////////////
 // farm routes
 
 
-app.get('/farm' , async (req , res) => {
+app.get('/farm', async (req , res) => {
     try{
-        res.json(await farmerInfo.find({}))
+    
+        res.json(await FarmInfo.find({}))
     } catch (error) {
         res.status(404).json(error)
     }
 });
 
+app.get('/farm/:id', async (req , res) => {
+    try{
+        const farm = await FarmInfo.findById(req.params.id)
+        res.json(farm)
+    } catch (error) {
+        res.status(404).json(error)
+    }
+});
 
-app.post('/farm' , async (req ,res) => {
+app.get('/farmer/farm', aFarmer, async (req , res) => {
+    try{
+        const farm = await FarmInfo.find({farmername: req.payload.farmername})
+        
+        res.json(farm)
+    } catch (error) {
+        res.status(404).json(error)
+    }
+});
+
+app.get('/farmer/farm/:id', aFarmer, async (req , res) => {
+    try{
+        const farm = await FarmInfo.findById(req.params.id)
+        
+        res.json(farm)
+    } catch (error) {
+        res.status(404).json(error)
+    }
+});
+
+app.post('/farm' , aFarmer, async (req ,res) => {
+    console.log('tis the way')
     try {
-        res.json(await farmerInfo.create(req.body))      
+        req.body.farmername = req.payload.farmername
+
+        const farm = await FarmInfo.create(req.body)
+        console.log(farm)
+        res.json(farm)      
     } catch (error) {
         res.status(400).json(error)
     }
 })
 
-app.get('/farm/:id' , async (req , res) => {
+app.put('/farm/:id', aFarmer, async (req , res) => {
     try{
-        const Farm = await farmerInfo.findById(req.params.id)
-        res.json(Farm)
-    } catch (error) {
-        res.status(404).json(error)
-    }
-});
-
-app.put('/farm/:id', async (req , res) => {
-    try{
-        res.json(await farmerInfo.findByIdAndUpdate(req.params.id, req.body  , {new:true}))
+        const farm = await FarmInfo.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+        })
+        res.json(farm)
     } catch (error) {
         res.status(400).json(error)
     }
 })
 
-app.delete('/farm/:id' , async (req , res) => {
+app.delete('/farm/:id', async (req , res) => {
     try{
-        res.json(await farmerInfo.findByIdAndDelete(req.params.id))
-        res.status(204).json(farmerInfo)
+        const farm = await FarmInfo.findByIdAndDelete(req.params.id)
+        res.json(farm)
+        res.status(204).json(farm)
     } catch (error) {
         res.status(400).json()
     }
 })
+
+app.post('/farmer/signup', async (req, res) => {
+    try {
+        let { farmername, password } = req.body
+        password = await bcrypt.hash(password, await bcrypt.genSalt(10))
+        
+        const farmer = await Farmer.create({ farmername, password })
+ 
+      res.status(201).json({message: 'Signup success, go ahead and plant away!'})
+
+    } catch(error) {
+        console.error('You aint a farmer here yet, try again!', error)
+        res.send('Please try again, in order to assist your community')
+    }
+})
+
+app.post('/user/signup', async (req, res) => {
+    try {
+        let { username, password, zip } = req.body
+        password = await bcrypt.hash(password, await bcrypt.genSalt(10))
+        
+        const user = await User.create({ username, password, zip })
+ 
+      res.status(201).json({message: 'Signup success, go ahead and food it up!'})
+    } catch(error) {
+        console.error('Not yet able to access the user features, please try again', error)
+        res.send('Please try again, in order to use the features of a user')
+    }})
+
+app.post('/farmer/login', async (req, res) => {
+    try {
+        const { farmername, password, } = req.body
+        const farmer = await Farmer.findOne({ farmername })
+        console.log(farmer)
+
+        if (!farmer) {
+            throw new Error('nah not planting seeds here yet')
+        }
+        console.log(password, farmer)
+        const paswordCheck = await bcrypt.compare(password, farmer.password)
+        if (!paswordCheck) {
+            throw new Error('Wrong keyphrase plase try again')
+        }
+        const token = jsonwebtoken.sign({ farmername: farmer.farmername }, process.env.SECRET)
+        res.cookie('token', token, {
+            httpOnly: true,
+            path: '/',
+            domain: 'localhost',
+            secure: false,
+            sameSite: 'lax',
+            maxAge: 3600000,
+        }) 
+            res.json(farmer)
+           } catch (error) {
+            res.status(400).json({ error: error.message })
+           }
+})
+
+app.post('/user/login', async (req, res) => {
+        try {
+            const { username, password, zip } = req.body
+            const user = await User.findOne({ username })
+            console.log(user)
+    
+            if (!user) {
+                throw new Error('nah not planting seeds here yet')
+            }
+            console.log(password, user)
+            const paswordCheck = await bcrypt.compare(password, user.password)
+            if (!paswordCheck) {
+                throw new Error('Wrong keyphrase plase try again')
+            }
+            const token = jsonwebtoken.sign({ username: user.username }, process.env.SECRET)
+            res.cookie('token', token, {
+                httpOnly: true,
+                path: '/',
+                domain: 'localhost',
+                secure: false,
+                sameSite: 'lax',
+                maxAge: 3600000,
+            }) 
+            console.log(token)
+                res.json(user)
+               } catch (error) {
+                res.status(400).json({ error: error.message })
+               }
+    })
+
+app.get('./getcookie', (req, res) => {
+    const sessionID = req.cookies.sessionID
+    console.log('Session ID:', sessionID)
+    res.send('cookie retrieved')
+})
+
+app.get("/logout", (req, res) => {
+    res.clearCookie("token");
+    res.json({ message: "You have been logged out" });
+  })
+
 
 ////////////////////////////////
 // User routes

@@ -15,23 +15,32 @@ const session = require('express-session')
 
 // Middleware configuration
 app.use(morgan('dev'))
-app.use(cors())
+app.use(cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  }))
+app.use(cookieParser())
 app.use(express.json())
-app.use(session({
-    secret: 'APEFOOD',
-    resave: false,
-    saveUninitialized: true
-}))
-const checkAuth = (req, res, next) => {
-    if (req.session.loggedIn) {
-        next()
+// app.use(session({
+//     secret: 'APEFOOD',
+//     resave: false,
+//     saveUninitialized: true
+// }))
+
+const checkAuth = async (req, res, next) => {
+    if (req.cookie.token) {
+        const payload = await jsonwebtoken.verify(req.cookies.token, process.env.SECRET);
+        req.payload = payload;
+        next();
     } else {
-        res.redirect('farmer/login')
+        // if there is no cookie, return an error
+        res.status(400).json({ error: "You are not authorized" });
+      }
     }
-}
+
 
 const aFarmer = (req, res, next) => {
-    if(req.session && req.session.farmer && req.session.user.aFarmer) {
+    if(req.session.loggedIn && req.session.farmername) {
         next()
     } else {
         res.redirect('/farmer/login')
@@ -47,15 +56,15 @@ const aUser = (req, res, next) => {
 ////////////////////////////////
 
 // mogoose configuration / schema configuration
-mongoose.connect(DATABASE_URL ,{
-    useUnifiedTopology: true,
-    useNewUrlParser: true,
-})
+// mongoose.connect(DATABASE_URL ,{
+//     useUnifiedTopology: true,
+//     useNewUrlParser: true,
+// })
 
 mongoose.connection
 .on('open', () => console.log('Connected to db'))
 .on('close', () => console.log('Not connected to db'))
-.on('error', () => console.log('Error connecting to db'))
+.on('error', (error) => console.log('Error connecting to db'))
 
 ////////////////////////////////
 
@@ -65,7 +74,7 @@ const productSchema = new mongoose.Schema({
     image : {type: String, required: true},
     description : {type: String, required: true}, 
     price : {type: String, required: true},
-    farmname: {type: String, required: true},
+    farmername: {type: String, required: true},
     username : {type: String, required: true},
 })
 
@@ -88,7 +97,7 @@ const farminfoSchema = new mongoose.Schema({
     city : {type: String, required: true},
     zip: {type: String, required: true},
     farmername: {type: String, required: true},
-    username : {type: String, required: true, unique: true},
+    username : {type: String, required: true},
     
 })
 
@@ -105,8 +114,9 @@ app.get('/', (req , res) => {
     res.send({working : "Running"})
 })
 
-app.post('/product' , async (req ,res) =>{
-    try{console.log(req.body)
+app.post('/product' , aFarmer, async (req ,res) =>{
+    try
+    {console.log(req.body)
         res.json(await product.create(req.body))
     } catch (error) {
         res.status(400).json(error)
@@ -133,7 +143,7 @@ app.get('/product/:id' , async (req , res) => {
     }
 })
 
-app.put('/product/:id' , async (req , res) => {
+app.put('/product/:id' , aFarmer, async (req , res) => {
     try{
         res.json(await product.findByIdAndUpdate(req.params.id, req.body  , {new:true}))
     } catch (error) {
@@ -141,7 +151,7 @@ app.put('/product/:id' , async (req , res) => {
     }
 })
 
-app.delete('/product/:id' , async (req ,res) => {
+app.delete('/product/:id' , aFarmer, async (req ,res) => {
     try{
         res.json(await product.findByIdAndDelete(req.params.id))
         res.status(204).json(product)
@@ -162,7 +172,7 @@ app.get('/farm' , async (req , res) => {
 });
 
 
-app.post('/farm' , async (req ,res) => {
+app.post('/farm' , aFarmer, async (req ,res) => {
     try {
         res.json(await farmerInfo.create(req.body))      
     } catch (error) {
@@ -179,7 +189,7 @@ app.get('/farm/:id' , async (req , res) => {
     }
 });
 
-app.put('/farm/:id', async (req , res) => {
+app.put('/farm/:id', aFarmer, async (req , res) => {
     try{
         res.json(await farmerInfo.findByIdAndUpdate(req.params.id, req.body  , {new:true}))
     } catch (error) {
@@ -187,7 +197,7 @@ app.put('/farm/:id', async (req , res) => {
     }
 })
 
-app.delete('/farm/:id' , async (req , res) => {
+app.delete('/farm/:id' , aFarmer, async (req , res) => {
     try{
         res.json(await farmerInfo.findByIdAndDelete(req.params.id))
         res.status(204).json(farmerInfo)
@@ -218,20 +228,22 @@ app.post('/user/signup', async (req, res) => {
     }})
 
 app.post('/farmer/login', async (req, res) => {
-    const aFarmer = await farmer.findOne({ farmername: req.body.farmername})
+    const aFarmer = await farmer.findOne({ farmername: req.body.farmername })
     console.log(aFarmer)
         if(!aFarmer) {
-            res.send('that aint a farmer here.. yet!', redirect('farmer/signup'))
+            res.send('that aint a farmer here.. yet!')
+     
         } else {
             const passmatches = bcrypt.compareSync(req.body.password, aFarmer.password)
             if (passmatches) {
                 req.session.farmername = req.body.farmername
                 req.session.loggedIn = true
-                res.cookie('sessionID', req.sessionID, {httpOnly: true })
-                // console.log(cookie)
+                const cookie = res.cookie('sessionID', req.sessionID, {httpOnly: true })
+                console.log(cookie)
                 res.redirect('/farmer')
             } else {
-                res.send('Wrong password, please try again', redirect('/farner/login'))
+                res.send('Wrong password, please try again')
+                
             }
         }
 })
@@ -240,23 +252,30 @@ app.post('/user/login', async (req, res) => {
     const aUser = await user.findOne({ username: req.body.username})
         console.log(aUser)
         if(!aUser) {
-            res.send('that aint a farmer here.. yet!', redirect('user/signup'))
+            res.send('that aint a farmer here.. yet!')
+          
         } else {
             const passmatches = bcrypt.compareSync(req.body.password, aUser.password)
             if (passmatches) {
                 req.session.username = req.body.username
                 req.session.loggedIn = true
                
-                res.cookie('sessionID', req.sessionID, {httpOnly: true })
-                // console.log(cookie)
+                const cookie = res.cookie('sessionID', req.sessionID, {httpOnly: true })
+                console.log(cookie)
                 res.redirect('/')
             } else {
-                res.send('Wrong password, please try again', redirect('/user/login'))
+                res.send('Wrong password, please try again')
+            
             }
         }
 
 })
 
+app.get('./getcookie', (req, res) => {
+    const sessionID = req.cookies.sessionID
+    console.log('Session ID:', sessionID)
+    res.send('cookie retrieved')
+})
 app.get('/farmer', checkAuth, (req, res) => {
     res.send('Welcome to your Farmer page')
 })

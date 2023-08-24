@@ -116,6 +116,34 @@ app.get('/', (req , res) => {
     res.send({working : "Running"})
 })
 
+app.get('/product' , async (req , res) => {
+    try{
+        res.json(await Product.find({}))
+    } catch (error){
+        res.status(400).json(error)
+    }
+})
+
+app.get('/product/:id' , async (req , res) => {
+    try{
+        const product = await Product.findById(req.params.id)
+        res.json(product) 
+    } catch (error) {
+        res.status(400).json(error)
+    }
+})
+
+app.get('/farmer/product', aFarmer, async (req , res) => {
+    try{
+        const product = await Product.find({farmername: req.payload.farmername})
+        
+        res.json(product)
+    } catch (error){
+        res.status(400).json(error)
+    }
+})
+
+
 app.post('/product' , aFarmer, async (req ,res) =>{
     try
     {console.log(req.body)
@@ -131,33 +159,8 @@ app.post('/product' , aFarmer, async (req ,res) =>{
 
 })
 
-app.get('farmer/product', aFarmer, async (req , res) => {
-    try{
-        const product = await Product.find({farmername: req.payload.farmername})
-        
-        res.json(product)
-    } catch (error){
-        res.status(400).json(error)
-    }
-})
-app.get('user/product', aUser, async (req , res) => {
-    try{
-        const product = await Product.find({username: req.payload.username})
-        
-        res.json(product)
-    } catch (error){
-        res.status(400).json(error)
-    }
-})
-app.get('/product' , async (req , res) => {
-    try{
-        res.json(await Product.find({}))
-    } catch (error){
-        res.status(400).json(error)
-    }
-})
 
-app.get('/product/:id', aFarmer, async (req , res) => {
+app.get('/farmer/product/:id', aFarmer, async (req , res) => {
     try{
         const product = await Product.findById(req.params.id)
         res.json(product) 
@@ -167,14 +170,6 @@ app.get('/product/:id', aFarmer, async (req , res) => {
 })
 
 
-app.get('/product/:id' , async (req , res) => {
-    try{
-        const product = await Product.findById(req.params.id)
-        res.json(product) 
-    } catch (error) {
-        res.status(400).json(error)
-    }
-})
 
 app.put('/product/:id' , aFarmer, async (req , res) => {
     try{
@@ -195,6 +190,16 @@ app.delete('/product/:id' , aFarmer, async (req ,res) => {
         res.status(400).json()
     }
 })
+// taken out for now but will be used for favorite catalog
+// app.get('user/product', aUser, async (req , res) => {
+//     try{
+//         const product = await Product.find({username: req.payload.username})
+        
+//         res.json(product)
+//     } catch (error){
+//         res.status(400).json(error)
+//     }
+// })
 ////////////////////////////////////////////////////////////////
 // farm routes
 
@@ -208,21 +213,19 @@ app.get('/farm' , async (req , res) => {
     }
 });
 
-
-app.post('/farm' , aFarmer, async (req ,res) => {
-    try {
-        req.body.farmername = req.payload.farmername
-
-        const farm = await FarmInfo.create(req.body)
-        console.log(farm)
-        res.json(farm)      
-    } catch (error) {
-        res.status(400).json(error)
-    }
-})
 app.get('/farm/:id' , async (req , res) => {
     try{
         const farm = await FarmInfo.findById(req.params.id)
+        res.json(farm)
+    } catch (error) {
+        res.status(404).json(error)
+    }
+});
+
+app.get('/farmer/farm', aFarmer, async (req , res) => {
+    try{
+        const farm = await FarmInfo.find({farmername: req.payload.farmername})
+        
         res.json(farm)
     } catch (error) {
         res.status(404).json(error)
@@ -238,6 +241,18 @@ app.get('/farmer/farm/:id', aFarmer, async (req , res) => {
         res.status(404).json(error)
     }
 });
+
+app.post('/farm' , aFarmer, async (req ,res) => {
+    try {
+        req.body.farmername = req.payload.farmername
+
+        const farm = await FarmInfo.create(req.body)
+        console.log(farm)
+        res.json(farm)      
+    } catch (error) {
+        res.status(400).json(error)
+    }
+})
 
 app.put('/farm/:id', aFarmer, async (req , res) => {
     try{

@@ -10,14 +10,15 @@ const cors = require('cors')
 const bcrypt = require('bcryptjs')
 const cookieParser = require('cookie-parser')
 const jsonwebtoken = require('jsonwebtoken')
-const session = require('express-session')
+
 ////////////////////////////////
 
 // mogoose configuration / schema configuration
-mongoose.connect(DATABASE_URL ,{
-    useUnifiedTopology: true,
-    useNewUrlParser: true,
-})
+mongoose.connect(DATABASE_URL)
+//  ,{
+//     useUnifiedTopology: true,
+//     useNewUrlParser: true,
+// })
 
 mongoose.connection
 .on('open', () => console.log('Connected to db'))
@@ -70,12 +71,12 @@ const Farmer = mongoose.model('Farmer', farmerSchema)
 
 
 // Middleware configuration
-app.use(cookieParser())
-app.use(morgan('dev'))
 app.use(cors({
     origin:'http://localhost:3000',
     credentials: true,
 }))
+app.use(cookieParser())
+app.use(morgan('dev'))
 app.use(express.json())
 
 
@@ -204,7 +205,7 @@ app.delete('/product/:id' , aFarmer, async (req ,res) => {
 // farm routes
 
 
-app.get('/farm' , async (req , res) => {
+app.get('/farm', async (req , res) => {
     try{
     
         res.json(await FarmInfo.find({}))
@@ -213,7 +214,7 @@ app.get('/farm' , async (req , res) => {
     }
 });
 
-app.get('/farm/:id' , async (req , res) => {
+app.get('/farm/:id', async (req , res) => {
     try{
         const farm = await FarmInfo.findById(req.params.id)
         res.json(farm)
@@ -243,6 +244,7 @@ app.get('/farmer/farm/:id', aFarmer, async (req , res) => {
 });
 
 app.post('/farm' , aFarmer, async (req ,res) => {
+    console.log('tis the way')
     try {
         req.body.farmername = req.payload.farmername
 
@@ -265,7 +267,7 @@ app.put('/farm/:id', aFarmer, async (req , res) => {
     }
 })
 
-app.delete('/farm/:id' , aFarmer, async (req , res) => {
+app.delete('/farm/:id', async (req , res) => {
     try{
         const farm = await FarmInfo.findByIdAndDelete(req.params.id)
         res.json(farm)

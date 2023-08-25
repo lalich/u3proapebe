@@ -96,7 +96,6 @@ const aFarmer = async (req, res, next) => {
 
        next()
     } else {
-        res.send('You are not yet authorized')
         res.redirect('/')
     }
 }
@@ -106,7 +105,6 @@ const aUser = async (req, res, next) => {
         req.paylaod = payload
         next()
     } else {
-        res.send('You are not yet authorized')
         res.redirect('/user/login')
     }
 }

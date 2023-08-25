@@ -319,10 +319,10 @@ app.post('/farmer/login', async (req, res) => {
         }
         const token = jsonwebtoken.sign({ farmername: farmer.farmername }, process.env.SECRET)
         let domain = 'localhost'
-            if (process.env.NODE_ENV === 'https://u3proapefe.vercel.app/') {
-                domain = 'https://u3proapefe.vercel.app/'
+            if (process.env.NODE_ENV === 'production') {
+                domain = 'u3proapefe.vercel.app'
             }
-        const secure = process.env.NODE_ENV === 'https://u3proapefe.vercel.app/'
+        const secure = process.env.NODE_ENV === 'production'
 
         res.cookie('token', token, {
             httpOnly: true,
@@ -354,10 +354,10 @@ app.post('/user/login', async (req, res) => {
             }
             const token = jsonwebtoken.sign({ username: user.username }, process.env.SECRET)
             let domain = 'localhost'
-            if (process.env.NODE_ENV === 'https://u3proapefe.vercel.app/') {
-                domain = 'https://u3proapefe.vercel.app/'
+            if (process.env.NODE_ENV === 'production') {
+                domain = 'u3proapefe.vercel.app/'
             }
-        const secure = process.env.NODE_ENV === 'https://u3proapefe.vercel.app/'
+        const secure = process.env.NODE_ENV === 'production'
             
             res.cookie('token', token, {
                 httpOnly: true,

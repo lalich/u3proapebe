@@ -322,11 +322,17 @@ app.post('/farmer/login', async (req, res) => {
             throw new Error('Wrong keyphrase plase try again')
         }
         const token = jsonwebtoken.sign({ farmername: farmer.farmername }, process.env.SECRET)
+        let domain = 'localhost'
+            if (process.env.NODE_ENV === 'https://u3proapefe.vercel.app/') {
+                domain = 'https://u3proapefe.vercel.app/'
+            }
+        const secure = process.env.NODE_ENV === 'https://u3proapefe.vercel.app/'
+
         res.cookie('token', token, {
             httpOnly: true,
             path: '/',
-            domain: 'localhost',
-            secure: false,
+            domain: domain,
+            secure: secure,
             sameSite: 'lax',
             maxAge: 3600000,
         }) 
@@ -351,11 +357,17 @@ app.post('/user/login', async (req, res) => {
                 throw new Error('Wrong keyphrase plase try again')
             }
             const token = jsonwebtoken.sign({ username: user.username }, process.env.SECRET)
+            let domain = 'localhost'
+            if (process.env.NODE_ENV === 'https://u3proapefe.vercel.app/') {
+                domain = 'https://u3proapefe.vercel.app/'
+            }
+        const secure = process.env.NODE_ENV === 'https://u3proapefe.vercel.app/'
+            
             res.cookie('token', token, {
                 httpOnly: true,
                 path: '/',
-                domain: 'localhost',
-                secure: false,
+                domain: domain,
+                secure: secure,
                 sameSite: 'lax',
                 maxAge: 3600000,
             }) 

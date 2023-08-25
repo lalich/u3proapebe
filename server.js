@@ -10,7 +10,7 @@ const cors = require('cors')
 const bcrypt = require('bcryptjs')
 const cookieParser = require('cookie-parser')
 const jsonwebtoken = require('jsonwebtoken')
-
+const session = require('express-session')
 ////////////////////////////////
 
 // mogoose configuration / schema configuration
@@ -52,8 +52,8 @@ const farminfoSchema = new mongoose.Schema({
     farmname : {type: String, required: true},
     image : {type: String, required: true},
     address : {type: String, required: true},
-    city : {type: String, required: true},
     state : {type: String, required: true},
+    city : {type: String, required: true},
     zip: {type: String, required: true},
     farmername: {type: String, required: true},
     
@@ -76,7 +76,20 @@ app.use(cors({
 }))
 app.use(cookieParser())
 app.use(morgan('dev'))
+app.use(cors({
+    origin:'https://u3proapefe.vercel.app',
+    credentials: true,
+}))
 app.use(express.json())
+
+
+const checkAuth = (req, res, next) => {
+    if (req.session.loggedIn) {
+        next()
+    } else {
+        res.redirect('farmer/login')
+    }
+}
 
 
 const aFarmer = async (req, res, next) => {
@@ -195,7 +208,7 @@ app.delete('/product/:id' , aFarmer, async (req ,res) => {
 // farm routes
 
 
-app.get('/farm', async (req , res) => {
+app.get('/farm' , async (req , res) => {
     try{
     
         res.json(await FarmInfo.find({}))
@@ -204,7 +217,7 @@ app.get('/farm', async (req , res) => {
     }
 });
 
-app.get('/farm/:id', async (req , res) => {
+app.get('/farm/:id' , async (req , res) => {
     try{
         const farm = await FarmInfo.findById(req.params.id)
         res.json(farm)
@@ -234,7 +247,6 @@ app.get('/farmer/farm/:id', aFarmer, async (req , res) => {
 });
 
 app.post('/farm' , aFarmer, async (req ,res) => {
-    console.log('tis the way')
     try {
         req.body.farmername = req.payload.farmername
 
@@ -257,7 +269,7 @@ app.put('/farm/:id', aFarmer, async (req , res) => {
     }
 })
 
-app.delete('/farm/:id', async (req , res) => {
+app.delete('/farm/:id' , aFarmer, async (req , res) => {
     try{
         const farm = await FarmInfo.findByIdAndDelete(req.params.id)
         res.json(farm)
@@ -358,6 +370,9 @@ app.get('./getcookie', (req, res) => {
     const sessionID = req.cookies.sessionID
     console.log('Session ID:', sessionID)
     res.send('cookie retrieved')
+})
+app.get('/farmer', checkAuth, (req, res) => {
+    res.send('Welcome to your Farmer page')
 })
 
 app.get("/logout", (req, res) => {

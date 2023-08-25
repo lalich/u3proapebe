@@ -89,23 +89,39 @@ const checkAuth = (req, res, next) => {
 
 
 const aFarmer = async (req, res, next) => {
-    if(req.cookies.token) {
-        console.log(req.cookies.token)
-       const payload = await jsonwebtoken.verify(req.cookies.token, process.env.SECRET)
-       req.payload = payload
+    const tokenCookie = req.cookies.token
 
-       next()
+    if(tokenCookie) {
+        console.log(req.cookies.token)
+        const token = tokenCookie.split('=')[1]
+        try {
+            const payload = await jsonwebtoken.verify(req.cookies.token, process.env.SECRET)
+            req.payload = payload
+            next()
+     } catch (error) {
+        res.redirect('/')
+     }
+       
+      
     } else {
         res.redirect('/')
     }
 }
 const aUser = async (req, res, next) => {
-    if(req.cookies.token) {
+    const tokenCookie = req.cookies.token
+
+    if(tokenCookie) {
+        console.log(req.cookies.token)
+        const token = tokenCookie.split('=')[1]
+        try {
         const payload = await jsonwebtoken.verify(req.cookies.token, process.env.SECRET)
         req.paylaod = payload
         next()
+    } catch (error) {
+        res.redirect('/')
+    }
     } else {
-        res.redirect('/user/login')
+        res.redirect('/')
     }
 }
 ////////////////////////////////

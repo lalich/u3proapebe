@@ -95,7 +95,7 @@ const aFarmer = async (req, res, next) => {
         console.log(req.cookies.token)
         const token = tokenCookie.split('=')[1]
         try {
-            const payload = await jsonwebtoken.verify(req.cookies.token, process.env.SECRET)
+            const payload = await jsonwebtoken.verify(token, process.env.SECRET)
             req.payload = payload
             next()
      } catch (error) {
@@ -114,7 +114,7 @@ const aUser = async (req, res, next) => {
         console.log(req.cookies.token)
         const token = tokenCookie.split('=')[1]
         try {
-        const payload = await jsonwebtoken.verify(req.cookies.token, process.env.SECRET)
+        const payload = await jsonwebtoken.verify(token, process.env.SECRET)
         req.paylaod = payload
         next()
     } catch (error) {

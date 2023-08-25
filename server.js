@@ -320,18 +320,19 @@ app.post('/farmer/login', async (req, res) => {
             throw new Error('Wrong keyphrase plase try again')
         }
         const token = jsonwebtoken.sign({ farmername: farmer.farmername }, process.env.SECRET)
-        let domain = 'localhost'
-            if (process.env.NODE_ENV === 'production') {
-                domain = '.vercel.app'
-            }
-        const secure = process.env.NODE_ENV === 'production'
+        // let domain = 'localhost'
+            if (process.env.NODE_ENV === 'production') 
+            // {
+            //     domain = '.vercel.app'
+            // }
+        // const secure = process.env.NODE_ENV === 'production'
 
         res.cookie('token', token, {
             httpOnly: true,
             path: '/',
-            domain: domain,
-            secure: secure,
-            sameSite: 'lax',
+            // domain: domain,
+            secure: true,
+            sameSite: 'none',
             maxAge: 3600000,
         }) 
         console.log('Token:', token)
@@ -357,18 +358,19 @@ app.post('/user/login', async (req, res) => {
                 throw new Error('Wrong keyphrase plase try again')
             }
             const token = jsonwebtoken.sign({ username: user.username }, process.env.SECRET)
-            let domain = 'localhost'
-            if (process.env.NODE_ENV === 'production') {
-                domain = '.vercel.app/'
-            }
-        const secure = process.env.NODE_ENV === 'production'
+            // let domain = 'localhost'
+            if (process.env.NODE_ENV === 'production') 
+            // {
+            //     domain = '.vercel.app/'
+            // }
+        // const secure = process.env.NODE_ENV === 'production'
             
             res.cookie('token', token, {
                 httpOnly: true,
                 path: '/',
-                domain: domain,
-                secure: secure,
-                sameSite: 'lax',
+                // domain: domain,
+                secure: true,
+                sameSite: 'none',
                 maxAge: 3600000,
             }) 
             console.log(token)

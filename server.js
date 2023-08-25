@@ -90,6 +90,7 @@ const checkAuth = (req, res, next) => {
 
 const aFarmer = async (req, res, next) => {
     if(req.cookies.token) {
+        console.log(req.cookies.token)
        const payload = await jsonwebtoken.verify(req.cookies.token, process.env.SECRET)
        req.payload = payload
 
@@ -223,9 +224,10 @@ app.get('/farm/:id' , async (req , res) => {
 });
 
 app.get('/farmer/farm', aFarmer, async (req , res) => {
+    console.log(aFarmer())
     try{
         const farm = await FarmInfo.find({farmername: req.payload.farmername})
-        
+      console.log(farm)  
         res.json(farm)
     } catch (error) {
         res.status(404).json(error)
@@ -332,6 +334,8 @@ app.post('/farmer/login', async (req, res) => {
             sameSite: 'lax',
             maxAge: 3600000,
         }) 
+        console.log('Token:', token)
+
             res.json(farmer)
            } catch (error) {
             res.status(400).json({ error: error.message })

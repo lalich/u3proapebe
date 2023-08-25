@@ -327,7 +327,7 @@ app.post('/farmer/login', async (req, res) => {
         const secure = process.env.NODE_ENV === 'production'
 
         res.cookie('token', token, {
-            httpOnly: true,
+            httpOnly: false,
             path: '/',
             domain: domain,
             secure: secure,
@@ -364,7 +364,7 @@ app.post('/user/login', async (req, res) => {
         const secure = process.env.NODE_ENV === 'production'
             
             res.cookie('token', token, {
-                httpOnly: true,
+                httpOnly: false,
                 path: '/',
                 domain: domain,
                 secure: secure,

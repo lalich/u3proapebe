@@ -76,10 +76,6 @@ app.use(cors({
 }))
 app.use(cookieParser())
 app.use(morgan('dev'))
-app.use(cors({
-    origin:'https://u3proapefe.vercel.app',
-    credentials: true,
-}))
 app.use(express.json())
 
 

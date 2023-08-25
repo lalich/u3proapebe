@@ -83,7 +83,7 @@ const checkAuth = (req, res, next) => {
     if (req.session.loggedIn) {
         next()
     } else {
-        res.redirect('farmer/login')
+        res.redirect('/')
     }
 }
 
@@ -96,7 +96,8 @@ const aFarmer = async (req, res, next) => {
 
        next()
     } else {
-        res.redirect('/farmer/login')
+        res.send('You are not yet authorized')
+        res.redirect('/')
     }
 }
 const aUser = async (req, res, next) => {
@@ -105,6 +106,7 @@ const aUser = async (req, res, next) => {
         req.paylaod = payload
         next()
     } else {
+        res.send('You are not yet authorized')
         res.redirect('/user/login')
     }
 }
@@ -327,7 +329,7 @@ app.post('/farmer/login', async (req, res) => {
         const secure = process.env.NODE_ENV === 'production'
 
         res.cookie('token', token, {
-            httpOnly: false,
+            httpOnly: true,
             path: '/',
             domain: domain,
             secure: secure,
@@ -364,7 +366,7 @@ app.post('/user/login', async (req, res) => {
         const secure = process.env.NODE_ENV === 'production'
             
             res.cookie('token', token, {
-                httpOnly: false,
+                httpOnly: true,
                 path: '/',
                 domain: domain,
                 secure: secure,

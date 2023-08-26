@@ -71,7 +71,7 @@ const Farmer = mongoose.model('Farmer', farmerSchema)
 
 // Middleware configuration
 app.use(cors({
-    origin: ["https://u3proapefe.vercel.app", 'http://localhost:3000', 'http://localhost:4000'],
+    origin: {feUrl} = process.env,
     credentials: true,
 }))
 app.use(cookieParser())
@@ -87,60 +87,43 @@ const checkAuth = (req, res, next) => {
     }
 }
 
+
 const aFarmer = async (req, res, next) => {
     const tokenCookie = req.cookies.token
 
     if(tokenCookie) {
-        // check if the request has a cookie
-        if(tokenCookie){
-          // if there is a cookie, try to decode it
-          const payload = await jsonwebtoken.verify(token, process.env.SECRET)
-          // store the payload in the request
-          req.payload = payload;
-          // move on to the next piece of middleware
-          next();
-        } else {
-          // if there is no cookie, return error
-          res.status(400).json({ error: "You are not authorized" });
-        }
-      }
-    }
-// const aFarmer = async (req, res, next) => {
-//     const tokenCookie = req.cookies.token
-
-//     if(tokenCookie) {
-//         console.log(req.cookies.token)
-//         // const token = tokenCookie.split('=')[1]
-//         try {
-//             const payload = await jsonwebtoken.verify(token, process.env.SECRET)
-//             req.payload = payload
-//             next();
-//      } catch (error) {
-//         res.redirect('/')
-//      }
+        console.log(req.cookies.token)
+        const token = tokenCookie.split('=')[1]
+        try {
+            const payload = await jsonwebtoken.verify(token, process.env.SECRET)
+            req.payload = payload
+            next()
+     } catch (error) {
+        res.redirect('/')
+     }
        
       
-//     } else {
-//         res.redirect('/')
-//     }
-// }
-// const aUser = async (req, res, next) => {
-//     const tokenCookie = req.cookies.token
+    } else {
+        res.redirect('/')
+    }
+}
+const aUser = async (req, res, next) => {
+    const tokenCookie = req.cookies.token
 
-//     if(tokenCookie) {
-//         console.log(req.cookies.token)
-//         const token = tokenCookie.split('=')[1]
-//         try {
-//         const payload = await jsonwebtoken.verify(token, process.env.SECRET)
-//         req.paylaod = payload
-//         next()
-//     } catch (error) {
-//         res.redirect('/')
-//     }
-//     } else {
-//         res.redirect('/')
-//     }
-// }
+    if(tokenCookie) {
+        console.log(req.cookies.token)
+        const token = tokenCookie.split('=')[1]
+        try {
+        const payload = await jsonwebtoken.verify(token, process.env.SECRET)
+        req.paylaod = payload
+        next()
+    } catch (error) {
+        res.redirect('/')
+    }
+    } else {
+        res.redirect('/')
+    }
+}
 ////////////////////////////////
 
 
@@ -359,26 +342,15 @@ app.post('/farmer/login', async (req, res) => {
             //     domain = '.vercel.app'
             // }
         // const secure = process.env.NODE_ENV === 'production'
-        if (process.env.NODE_ENV === 'production') {
 
-            res.cookie('token', token, {
-                httpOnly: true,
-                path: '/',
-                // domain: domain,
-                secure: true,
-                sameSite: 'none',
-                maxAge: 3600000,
-            }) 
-        } else {
-            res.cookie('token', token, {
-                httpOnly: true,
-                path: '/',
-                domain: 'localhost',
-                secure: false,
-                sameSite: 'lax',
-                maxAge: 3600000,
-            })  
-        }
+        res.cookie('token', token, {
+            httpOnly: true,
+            path: '/',
+            // domain: domain,
+            secure: true,
+            sameSite: 'none',
+            maxAge: 3600000,
+        }) 
         console.log('Token:', token)
 
             res.json(farmer)
@@ -408,8 +380,7 @@ app.post('/user/login', async (req, res) => {
             //     domain = '.vercel.app/'
             // }
         // const secure = process.env.NODE_ENV === 'production'
-        if (process.env.NODE_ENV === 'production') {
-
+            
             res.cookie('token', token, {
                 httpOnly: true,
                 path: '/',
@@ -418,23 +389,12 @@ app.post('/user/login', async (req, res) => {
                 sameSite: 'none',
                 maxAge: 3600000,
             }) 
-        } else {
-            res.cookie('token', token, {
-                httpOnly: true,
-                path: '/',
-                domain: 'localhost',
-                secure: false,
-                sameSite: 'lax',
-                maxAge: 3600000,
-            })  
-        }
-        console.log('Token:', token)
-
-            res.json(user)
-           } catch (error) {
-            res.status(400).json({ error: error.message })
-           }
-})
+            console.log(token)
+                res.json(user)
+               } catch (error) {
+                res.status(400).json({ error: error.message })
+               }
+    })
 
 app.get('./getcookie', (req, res) => {
     const sessionID = req.cookies.sessionID

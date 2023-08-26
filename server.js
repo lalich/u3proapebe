@@ -70,12 +70,12 @@ const Farmer = mongoose.model('Farmer', farmerSchema)
 
 
 // Middleware configuration
-app.use(cors({
-    origin: {feUrl} = process.env,
-    credentials: true,
-}))
 app.use(cookieParser())
 app.use(morgan('dev'))
+app.use(cors({
+    origin:'http://localhost:3000',
+    credentials: true,
+}))
 app.use(express.json())
 
 
@@ -83,45 +83,28 @@ const checkAuth = (req, res, next) => {
     if (req.session.loggedIn) {
         next()
     } else {
-        res.redirect('/')
+        res.redirect('farmer/login')
     }
 }
 
 
 const aFarmer = async (req, res, next) => {
-    const tokenCookie = req.cookies.token
+    if(req.cookies.token) {
+       const payload = await jsonwebtoken.verify(req.cookies.token, process.env.SECRET)
+       req.payload = payload
 
-    if(tokenCookie) {
-        console.log(req.cookies.token)
-        const token = tokenCookie.split('=')[1]
-        try {
-            const payload = await jsonwebtoken.verify(token, process.env.SECRET)
-            req.payload = payload
-            next()
-     } catch (error) {
-        res.redirect('/')
-     }
-       
-      
+       next()
     } else {
-        res.redirect('/')
+        res.redirect('/farmer/login')
     }
 }
 const aUser = async (req, res, next) => {
-    const tokenCookie = req.cookies.token
-
-    if(tokenCookie) {
-        console.log(req.cookies.token)
-        const token = tokenCookie.split('=')[1]
-        try {
-        const payload = await jsonwebtoken.verify(token, process.env.SECRET)
+    if(req.cookies.token) {
+        const payload = await jsonwebtoken.verify(req.cookies.token, process.env.SECRET)
         req.paylaod = payload
         next()
-    } catch (error) {
-        res.redirect('/')
-    }
     } else {
-        res.redirect('/')
+        res.redirect('/user/login')
     }
 }
 ////////////////////////////////
@@ -240,10 +223,9 @@ app.get('/farm/:id' , async (req , res) => {
 });
 
 app.get('/farmer/farm', aFarmer, async (req , res) => {
-    console.log(aFarmer())
     try{
         const farm = await FarmInfo.find({farmername: req.payload.farmername})
-      console.log(farm)  
+        
         res.json(farm)
     } catch (error) {
         res.status(404).json(error)
@@ -336,23 +318,14 @@ app.post('/farmer/login', async (req, res) => {
             throw new Error('Wrong keyphrase plase try again')
         }
         const token = jsonwebtoken.sign({ farmername: farmer.farmername }, process.env.SECRET)
-        // let domain = 'localhost'
-            // if (process.env.NODE_ENV === 'production') 
-            // {
-            //     domain = '.vercel.app'
-            // }
-        // const secure = process.env.NODE_ENV === 'production'
-
         res.cookie('token', token, {
             httpOnly: true,
             path: '/',
-            // domain: domain,
-            secure: true,
-            sameSite: 'none',
+            domain: 'localhost',
+            secure: false,
+            sameSite: 'lax',
             maxAge: 3600000,
         }) 
-        console.log('Token:', token)
-
             res.json(farmer)
            } catch (error) {
             res.status(400).json({ error: error.message })
@@ -374,19 +347,12 @@ app.post('/user/login', async (req, res) => {
                 throw new Error('Wrong keyphrase plase try again')
             }
             const token = jsonwebtoken.sign({ username: user.username }, process.env.SECRET)
-            // let domain = 'localhost'
-            // if (process.env.NODE_ENV === 'production') 
-            // {
-            //     domain = '.vercel.app/'
-            // }
-        // const secure = process.env.NODE_ENV === 'production'
-            
             res.cookie('token', token, {
                 httpOnly: true,
                 path: '/',
-                // domain: domain,
-                secure: true,
-                sameSite: 'none',
+                domain: 'localhost',
+                secure: false,
+                sameSite: 'lax',
                 maxAge: 3600000,
             }) 
             console.log(token)

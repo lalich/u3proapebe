@@ -87,26 +87,43 @@ const checkAuth = (req, res, next) => {
     }
 }
 
-
 const aFarmer = async (req, res, next) => {
     const tokenCookie = req.cookies.token
 
     if(tokenCookie) {
-        console.log(req.cookies.token)
-        const token = tokenCookie.split('=')[1]
-        try {
-            const payload = await jsonwebtoken.verify(token, process.env.SECRET)
-            req.payload = payload
-            next()
-     } catch (error) {
-        res.redirect('/')
-     }
+        // check if the request has a cookie
+        if(tokenCookie){
+          // if there is a cookie, try to decode it
+          const payload = await jsonwebtoken.verify(token, process.env.SECRET)
+          // store the payload in the request
+          req.payload = payload;
+          // move on to the next piece of middleware
+          next();
+        } else {
+          // if there is no cookie, return error
+          res.status(400).json({ error: "You are not authorized" });
+        }
+      }
+    }
+// const aFarmer = async (req, res, next) => {
+//     const tokenCookie = req.cookies.token
+
+//     if(tokenCookie) {
+//         console.log(req.cookies.token)
+//         // const token = tokenCookie.split('=')[1]
+//         try {
+//             const payload = await jsonwebtoken.verify(token, process.env.SECRET)
+//             req.payload = payload
+//             next();
+//      } catch (error) {
+//         res.redirect('/')
+//      }
        
       
-    } else {
-        res.redirect('/')
-    }
-}
+//     } else {
+//         res.redirect('/')
+//     }
+// }
 const aUser = async (req, res, next) => {
     const tokenCookie = req.cookies.token
 

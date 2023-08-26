@@ -337,7 +337,7 @@ app.post('/farmer/login', async (req, res) => {
         }
         const token = jsonwebtoken.sign({ farmername: farmer.farmername }, process.env.SECRET)
         // let domain = 'localhost'
-            if (process.env.NODE_ENV === 'production') 
+            // if (process.env.NODE_ENV === 'production') 
             // {
             //     domain = '.vercel.app'
             // }
@@ -375,7 +375,7 @@ app.post('/user/login', async (req, res) => {
             }
             const token = jsonwebtoken.sign({ username: user.username }, process.env.SECRET)
             // let domain = 'localhost'
-            if (process.env.NODE_ENV === 'production') 
+            // if (process.env.NODE_ENV === 'production') 
             // {
             //     domain = '.vercel.app/'
             // }

@@ -71,7 +71,7 @@ const Farmer = mongoose.model('Farmer', farmerSchema)
 
 // Middleware configuration
 app.use(cors({
-    origin: {feUrl} = process.env,
+    origin: "https://u3proapefe.vercel.app",
     credentials: true,
 }))
 app.use(cookieParser())
